@@ -28,24 +28,32 @@ export const useAuthStore = create<AuthState>((set) => ({
   fetchUser: async () => {
     const { data, error } = await supabase.auth.getUser();
     if (!error && data?.user) {
-      set({ 
-        user: { 
-          id: data.user?.id ?? '', 
-          email: data.user?.email ?? '', 
-          full_name: data.user?.user_metadata?.full_name ?? '',
-          phone_number: data.user?.user_metadata?.phone_number ?? ''
-        } 
-      });
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('full_name, phone_number')
+        .eq('id', data.user.id)
+        .single();
+
+      if (!userError && userData) {
+        set({
+          user: {
+            id: data.user.id ?? '',
+            email: data.user.email ?? '',
+            full_name: userData.full_name ?? '',
+            phone_number: userData.phone_number ?? '',
+          },
+        });
+      }
     } else {
       set({ user: null });
     }
   },
 
-  signUp: async (email, password, fullName, phoneNumber) => { // ✅ Added phoneNumber parameter
+  signUp: async (email, password, fullName, phoneNumber) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: fullName, phone_number: phoneNumber } }, // ✅ Passing phoneNumber
+      options: { data: { full_name: fullName, phone_number: phoneNumber } },
     });
 
     if (error) throw error;
@@ -56,7 +64,7 @@ export const useAuthStore = create<AuthState>((set) => ({
           id: data.user.id,
           email: data.user.email,
           full_name: fullName,
-          phone_number: phoneNumber, // ✅ No more error
+          phone_number: phoneNumber,
         },
       ]);
     }
@@ -67,14 +75,22 @@ export const useAuthStore = create<AuthState>((set) => ({
     if (error) throw error;
 
     if (data?.user) {
-      set({ 
-        user: { 
-          id: data.user?.id ?? '', 
-          email: data.user?.email ?? '', 
-          full_name: data.user?.user_metadata?.full_name ?? '',
-          phone_number: data.user?.user_metadata?.phone_number ?? '' // ✅ Added phone_number
-        } 
-      });
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('full_name, phone_number')
+        .eq('id', data.user.id)
+        .single();
+
+      if (!userError && userData) {
+        set({
+          user: {
+            id: data.user.id ?? '',
+            email: data.user.email ?? '',
+            full_name: userData.full_name ?? '',
+            phone_number: userData.phone_number ?? '',
+          },
+        });
+      }
     }
   },
 

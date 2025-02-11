@@ -19,6 +19,8 @@ import Terms from './pages/Terms';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import ShippingPolicy from './pages/ShippingPolicy';
 import RefundPolicy from './pages/RefundPolicy';
+import UploadDesign from './pages/UploadDesign';
+import Admin from './pages/Admin';
 
 function App() {
   const fetchUser = useAuthStore((state) => state.fetchUser);
@@ -47,6 +49,9 @@ function App() {
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/shipping-policy" element={<ShippingPolicy />} />
               <Route path="/cancellation-refunds" element={<RefundPolicy />} />
+              <Route path="/upload-design" element={<UploadDesign />} />
+              <Route path="/admin" element={<Admin />} />
+
             </Routes>
           </main>
           <Footer />
