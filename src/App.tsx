@@ -15,6 +15,10 @@ import Orders from './pages/Orders';
 import Profile from './pages/Profile';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
+import Terms from './pages/Terms';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import ShippingPolicy from './pages/ShippingPolicy';
+import RefundPolicy from './pages/RefundPolicy';
 
 function App() {
   const fetchUser = useAuthStore((state) => state.fetchUser);
@@ -39,6 +43,10 @@ function App() {
               <Route path="/profile" element={<Profile />} />
               <Route path="/cart" element={<Cart />} />
               <Route path="/checkout" element={<Checkout />} />
+              <Route path="/terms-and-conditions" element={<Terms />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/shipping-policy" element={<ShippingPolicy />} />
+              <Route path="/cancellation-refunds" element={<RefundPolicy />} />
             </Routes>
           </main>
           <Footer />

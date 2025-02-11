@@ -15,7 +15,17 @@ const Checkout = () => {
 
   const totalAmount = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  const handleOrderPlacement = async () => {
+  const loadRazorpay = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const handlePayment = async () => {
     if (!user) {
       setError('You must be logged in to place an order.');
       return;
@@ -30,39 +40,68 @@ const Checkout = () => {
     setError('');
 
     try {
-      // Insert Order into Supabase
-      const { data, error } = await supabase
-        .from('orders')
-        .insert([
-          {
-            user_id: user.id,
-            total_amount: totalAmount,
-            shipping_address: shippingAddress,
-            status: 'pending',
-            payment_status: 'pending',
-          },
-        ])
-        .select();
+      const res = await loadRazorpay();
 
-      if (error) throw error;
-      const orderId = data[0].id;
+      if (!res) {
+        setError('Failed to load Razorpay. Please check your internet connection.');
+        return;
+      }
 
-      // Insert Order Items into Supabase
-      const orderItems = cart.map((item) => ({
-        order_id: orderId,
-        design_id: item.id,
-        quantity: item.quantity,
-        price_at_time: item.price,
-      }));
+      const options = {
+        key: 'YOUR_RAZORPAY_KEY', // Replace with your Razorpay API Key
+        amount: totalAmount * 100, // Amount in paise
+        currency: 'INR',
+        name: 'Nature Embroidery',
+        description: 'Payment for embroidery order',
+        handler: async function (response: any) {
+          // Payment successful, save order details
+          const { data, error } = await supabase
+            .from('orders')
+            .insert([
+              {
+                user_id: user.id,
+                total_amount: totalAmount,
+                shipping_address: shippingAddress,
+                status: 'confirmed',
+                payment_status: 'paid',
+                razorpay_payment_id: response.razorpay_payment_id,
+              },
+            ])
+            .select();
 
-      const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
-      if (itemsError) throw itemsError;
+          if (error) throw error;
 
-      // Clear Cart & Redirect to Order Confirmation
-      clearCart();
-      navigate(`/order-confirmation/${orderId}`);
-    } catch (err: any) {
-      setError('Failed to place order. Please try again.');
+          const orderId = data[0].id;
+
+          // Insert order items
+          const orderItems = cart.map((item) => ({
+            order_id: orderId,
+            design_id: item.id,
+            quantity: item.quantity,
+            price_at_time: item.price,
+          }));
+
+          const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
+          if (itemsError) throw itemsError;
+
+          // Clear Cart & Redirect
+          clearCart();
+          navigate(`/order-confirmation/${orderId}`);
+        },
+        prefill: {
+          name: user?.full_name || 'Guest',
+          email: user?.email || 'guest@example.com',
+          contact: user?.phone_number || '', // ✅ Use correct property
+        },
+        theme: {
+          color: '#6D28D9',
+        },
+      };
+
+      const paymentObject = new (window as any).Razorpay(options);
+      paymentObject.open();
+    } catch (err) {
+      setError('Payment failed. Please try again.');
       console.error(err);
     } finally {
       setLoading(false);
@@ -82,11 +121,11 @@ const Checkout = () => {
           {cart.map((item) => (
             <li key={item.id} className="flex justify-between py-3">
               <span>{item.name} (x{item.quantity})</span>
-              <span className="font-semibold">${(item.price * item.quantity).toFixed(2)}</span>
+              <span className="font-semibold">₹{(item.price * item.quantity).toFixed(2)}</span>
             </li>
           ))}
         </ul>
-        <div className="mt-4 text-xl font-bold text-right">Total: ${totalAmount.toFixed(2)}</div>
+        <div className="mt-4 text-xl font-bold text-right">Total: ₹{totalAmount.toFixed(2)}</div>
 
         {/* Shipping Address */}
         <div className="mt-6">
@@ -100,13 +139,13 @@ const Checkout = () => {
           />
         </div>
 
-        {/* Place Order Button */}
+        {/* Place Order & Pay Button */}
         <button
-          onClick={handleOrderPlacement}
+          onClick={handlePayment}
           disabled={loading}
           className="w-full mt-6 bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 transition disabled:opacity-50"
         >
-          {loading ? 'Placing Order...' : 'Place Order'}
+          {loading ? 'Processing Payment...' : 'Pay Now'}
         </button>
       </div>
     </div>
@@ -114,3 +153,4 @@ const Checkout = () => {
 };
 
 export default Checkout;
+

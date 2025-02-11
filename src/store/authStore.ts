@@ -5,6 +5,7 @@ interface User {
   id: string;
   email: string;
   full_name: string;
+  phone_number?: string;
 }
 
 interface AuthState {
@@ -12,7 +13,7 @@ interface AuthState {
   loading: boolean;
   setUser: (user: User | null) => void;
   fetchUser: () => Promise<void>;
-  signUp: (email: string, password: string, fullName: string) => Promise<void>;
+  signUp: (email: string, password: string, fullName: string, phoneNumber: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   updatePassword: (newPassword: string) => Promise<void>;
@@ -31,7 +32,8 @@ export const useAuthStore = create<AuthState>((set) => ({
         user: { 
           id: data.user?.id ?? '', 
           email: data.user?.email ?? '', 
-          full_name: data.user?.user_metadata?.full_name ?? '' 
+          full_name: data.user?.user_metadata?.full_name ?? '',
+          phone_number: data.user?.user_metadata?.phone_number ?? ''
         } 
       });
     } else {
@@ -39,11 +41,11 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-  signUp: async (email, password, fullName) => {
+  signUp: async (email, password, fullName, phoneNumber) => { // ✅ Added phoneNumber parameter
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: fullName } },
+      options: { data: { full_name: fullName, phone_number: phoneNumber } }, // ✅ Passing phoneNumber
     });
 
     if (error) throw error;
@@ -54,6 +56,7 @@ export const useAuthStore = create<AuthState>((set) => ({
           id: data.user.id,
           email: data.user.email,
           full_name: fullName,
+          phone_number: phoneNumber, // ✅ No more error
         },
       ]);
     }
@@ -68,7 +71,8 @@ export const useAuthStore = create<AuthState>((set) => ({
         user: { 
           id: data.user?.id ?? '', 
           email: data.user?.email ?? '', 
-          full_name: data.user?.user_metadata?.full_name ?? '' 
+          full_name: data.user?.user_metadata?.full_name ?? '',
+          phone_number: data.user?.user_metadata?.phone_number ?? '' // ✅ Added phone_number
         } 
       });
     }
