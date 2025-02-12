@@ -66,7 +66,9 @@ const Profile = () => {
       .from('profile_pictures')
       .getPublicUrl(filePath);
 
-    setNewProfilePicture(publicUrlData.publicUrl); // Temporarily store new picture
+    const updatedProfilePicture = `${publicUrlData.publicUrl}?t=${new Date().getTime()}`; // Add timestamp to force refresh
+
+    setNewProfilePicture(updatedProfilePicture); // Temporarily store new picture
     setUploading(false);
   };
 
@@ -190,5 +192,3 @@ const Profile = () => {
 };
 
 export default Profile;
-
-
