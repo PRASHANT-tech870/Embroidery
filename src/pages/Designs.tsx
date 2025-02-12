@@ -1,47 +1,78 @@
-import React, { useEffect, useState } from "react";
-import { supabase } from "../lib/supabase";
+import React, { useState } from "react";
 import { ShoppingCart } from "lucide-react";
-import { useCartStore } from "../store/cartStore"; // Import cart store
+import { useCartStore } from "../store/cartStore";
 
 interface Design {
   id: string;
   name: string;
   pdf_url: string;
-  price_range: string; // Example: "500-2000"
+  max_pages: number; // Number of pages for this PDF
+  price_range: string;
 }
 
+// Designs Data with Different Page Limits
+const designs: Design[] = [
+  {
+    id: "1",
+    name: "Embroidery Design Set 1",
+    pdf_url:
+      "https://wnciekjnpsyqterxwhlv.supabase.co/storage/v1/object/public/design_pdfs/D%20Bp3600.pdf",
+    max_pages: 52,
+    price_range: "500-2000",
+  },
+  {
+    id: "2",
+    name: "Embroidery Design Set 2",
+    pdf_url:
+      "https://wnciekjnpsyqterxwhlv.supabase.co/storage/v1/object/public/design_pdfs/G%20Bp3600.pdf",
+    max_pages: 52,
+    price_range: "500-2000",
+  },
+  {
+    id: "3",
+    name: "Embroidery Design Set 3",
+    pdf_url:
+      "https://wnciekjnpsyqterxwhlv.supabase.co/storage/v1/object/public/design_pdfs/I%20Bp3600.pdf",
+    max_pages: 54,
+    price_range: "500-2000",
+  },
+  {
+    id: "4",
+    name: "Embroidery Design Set 4",
+    pdf_url:
+      "https://wnciekjnpsyqterxwhlv.supabase.co/storage/v1/object/public/design_pdfs/L%20Bp3600.pdf",
+    max_pages: 50,
+    price_range: "500-2000",
+  },
+  {
+    id: "5",
+    name: "Embroidery Design Set 5",
+    pdf_url:
+      "https://wnciekjnpsyqterxwhlv.supabase.co/storage/v1/object/public/design_pdfs/E%20Bp3600.pdf",
+    max_pages: 48,
+    price_range: "500-2000",
+  },
+];
+
 const Designs = () => {
-  const [designs, setDesigns] = useState<Design[]>([]);
-  const [selectedPage, setSelectedPage] = useState<number | null>(null);
-  const [calculatedPrice, setCalculatedPrice] = useState<number | null>(null);
   const { addToCart } = useCartStore(); // Access cart functions
+  const [selectedPages, setSelectedPages] = useState<{ [key: string]: number | null }>({});
+  const [calculatedPrices, setCalculatedPrices] = useState<{ [key: string]: number | null }>({});
 
-  useEffect(() => {
-    fetchDesigns();
-  }, []);
-
-  const fetchDesigns = async () => {
-    try {
-      const { data, error } = await supabase.from("designs").select("*");
-      if (error) throw error;
-      setDesigns(data || []);
-    } catch (error) {
-      console.error("Error fetching designs:", error);
-    }
-  };
-
-  const handlePageSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const page = parseInt(e.target.value);
-    if (page >= 1 && page <= 52) {
-      setSelectedPage(page);
-      setCalculatedPrice(500 + Math.floor(Math.random() * 1500)); // Set random price between 500-2000
+  const handlePageSelection = (designId: string, page: number, maxPages: number) => {
+    if (page >= 1 && page <= maxPages) {
+      setSelectedPages((prev) => ({ ...prev, [designId]: page }));
+      setCalculatedPrices((prev) => ({ ...prev, [designId]: 500 + Math.floor(Math.random() * 1500) }));
     } else {
-      setSelectedPage(null);
-      setCalculatedPrice(null);
+      setSelectedPages((prev) => ({ ...prev, [designId]: null }));
+      setCalculatedPrices((prev) => ({ ...prev, [designId]: null }));
     }
   };
 
   const handleAddToCart = (design: Design) => {
+    const selectedPage = selectedPages[design.id];
+    const calculatedPrice = calculatedPrices[design.id];
+
     if (!selectedPage || !calculatedPrice) return;
 
     addToCart({
@@ -66,42 +97,48 @@ const Designs = () => {
       ) : (
         <div className="border p-6 bg-white rounded-lg shadow-md">
           {designs.map((design) => (
-            <div key={design.id}>
+            <div key={design.id} className="mb-6">
               <h3 className="text-2xl font-semibold">{design.name}</h3>
               <p className="text-gray-600">Price Range: ₹{design.price_range}</p>
-              <a
-                href={design.pdf_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 underline mt-2 block"
-              >
-                View Designs (PDF)
-              </a>
 
-              {/* Design Selection */}
+              {/* PDF Link */}
+              <div className="mt-2">
+                <a
+                  href={design.pdf_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-blue-600 underline mt-1"
+                >
+                  View Design (PDF)
+                </a>
+              </div>
+
+              {/* Page Selection */}
               <div className="mt-4">
-                <label className="block font-semibold">Enter Design Page (1-54)</label>
+                <label className="block font-semibold">
+                  Enter Design Page (1-{design.max_pages})
+                </label>
                 <input
                   type="number"
                   min="1"
-                  max="52"
-                  value={selectedPage || ""}
-                  onChange={handlePageSelection}
+                  max={design.max_pages}
+                  value={selectedPages[design.id] || ""}
+                  onChange={(e) => handlePageSelection(design.id, parseInt(e.target.value), design.max_pages)}
                   className="border rounded-lg p-2 w-full mt-2"
                 />
               </div>
 
               {/* Show Calculated Price */}
-              {calculatedPrice && (
+              {calculatedPrices[design.id] && (
                 <div className="mt-2 text-lg font-bold text-green-600">
-                  Price: ₹{calculatedPrice}
+                  Price: ₹{calculatedPrices[design.id]}
                 </div>
               )}
 
               {/* Add to Cart */}
               <button
                 onClick={() => handleAddToCart(design)}
-                disabled={!selectedPage || !calculatedPrice}
+                disabled={!selectedPages[design.id] || !calculatedPrices[design.id]}
                 className="mt-4 bg-purple-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-purple-700 disabled:opacity-50"
               >
                 <ShoppingCart size={20} />
