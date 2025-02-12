@@ -1,13 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useCartStore } from '../store/cartStore';
-import { ShoppingCart, User, LogOut } from 'lucide-react';
+import { ShoppingCart, User, LogOut, Menu } from 'lucide-react';
 
 const Navbar = () => {
   const { user, signOut } = useAuthStore();
   const { cart } = useCartStore();
   const navigate = useNavigate();
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
@@ -18,21 +19,24 @@ const Navbar = () => {
     <nav className="bg-purple-700 text-white shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
-          {/* Logo and Brand Name */}
-          <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-2 hover:text-white transition">
-              <img src="/images/logo.png" alt="Logo" className="h-10 w-10 object-cover rounded-full" />
-              <span className="font-bold text-xl">Nature Embroidery</span>
-            </Link>
-          </div>
+          {/* Logo */}
+          <Link to="/" className="flex items-center space-x-2">
+            <img src="/images/logo.png" alt="Logo" className="h-10 w-10 object-cover rounded-full" />
+            <span className="font-bold text-lg sm:text-xl">Nature Embroidery</span>
+          </Link>
 
-          {/* Navigation Links */}
-          <div className="flex items-center space-x-4">
-            <Link to="/designs" className="text-white/80 hover:text-white transition">Designs</Link>
-            <Link to="/contact" className="text-white/80 hover:text-white transition">Contact</Link>
+          {/* Hamburger Menu Button (Mobile) */}
+          <button className="sm:hidden" onClick={() => setIsOpen(!isOpen)}>
+            <Menu size={24} />
+          </button>
+
+          {/* Navigation Links (Desktop) */}
+          <div className="hidden sm:flex items-center space-x-4">
+            <Link to="/designs" className="hover:text-gray-200">Designs</Link>
+            <Link to="/contact" className="hover:text-gray-200">Contact</Link>
 
             <Link to="/cart" className="relative">
-              <ShoppingCart size={24} className="text-white hover:text-gray-300 transition" />
+              <ShoppingCart size={24} className="hover:text-gray-300" />
               {cart.length > 0 && (
                 <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
                   {cart.length}
@@ -42,31 +46,45 @@ const Navbar = () => {
 
             {user ? (
               <>
-                <Link to="/orders" className="text-white/80 hover:text-white transition">
-                  My Orders
-                </Link>
-                <Link to="/profile" className="text-white/80 hover:text-white transition">
-                  <User size={20} />
-                </Link>
-                <button onClick={handleSignOut} className="text-white/80 hover:text-white transition">
-                  <LogOut size={20} />
-                </button>
+                <Link to="/orders" className="hover:text-gray-200">My Orders</Link>
+                <Link to="/profile" className="hover:text-gray-200"><User size={20} /></Link>
+                <button onClick={handleSignOut} className="hover:text-gray-200"><LogOut size={20} /></button>
               </>
             ) : (
               <>
-                <Link to="/login" className="text-white/80 hover:text-white transition">Login</Link>
-                <Link to="/signup" className="text-white/80 hover:text-white transition">
-                  Sign Up
-                </Link>
+                <Link to="/login" className="hover:text-gray-200">Login</Link>
+                <Link to="/signup" className="hover:text-gray-200">Sign Up</Link>
               </>
             )}
           </div>
         </div>
       </div>
+
+      {/* Mobile Navigation Menu */}
+      {isOpen && (
+        <div className="sm:hidden bg-purple-800 py-4">
+          <Link to="/designs" className="block py-2 px-4">Designs</Link>
+          <Link to="/contact" className="block py-2 px-4">Contact</Link>
+          <Link to="/cart" className="block py-2 px-4">Cart ({cart.length})</Link>
+          {user ? (
+            <>
+              <Link to="/orders" className="block py-2 px-4">My Orders</Link>
+              <Link to="/profile" className="block py-2 px-4">Profile</Link>
+              <button onClick={handleSignOut} className="block py-2 px-4">Logout</button>
+            </>
+          ) : (
+            <>
+              <Link to="/login" className="block py-2 px-4">Login</Link>
+              <Link to="/signup" className="block py-2 px-4">Sign Up</Link>
+            </>
+          )}
+        </div>
+      )}
     </nav>
   );
 };
 
 export default Navbar;
+
 
 
