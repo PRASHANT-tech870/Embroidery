@@ -6,11 +6,10 @@ interface Design {
   id: string;
   name: string;
   pdf_url: string;
-  max_pages: number; // Number of pages for this PDF
+  max_pages: number;
   price_range: string;
 }
 
-// Designs Data with Different Page Limits
 const designs: Design[] = [
   {
     id: "1",
@@ -55,7 +54,7 @@ const designs: Design[] = [
 ];
 
 const Designs = () => {
-  const { addToCart } = useCartStore(); // Access cart functions
+  const { addToCart } = useCartStore();
   const [selectedPages, setSelectedPages] = useState<{ [key: string]: number | null }>({});
   const [calculatedPrices, setCalculatedPrices] = useState<{ [key: string]: number | null }>({});
 
@@ -80,25 +79,28 @@ const Designs = () => {
       name: `${design.name} (Page ${selectedPage})`,
       price: calculatedPrice,
       quantity: 1,
-      image_url: "", // No image, only PDF reference
+      image_url: "",
     });
 
     alert(`Added Design (Page ${selectedPage}) to Cart!`);
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Embroidery Designs</h1>
+    <div className="max-w-5xl mx-auto px-4 md:px-6 lg:px-8 py-8">
+      <h1 className="text-2xl md:text-3xl font-bold text-center mb-6">Embroidery Designs</h1>
 
       {designs.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-gray-600">No designs available yet.</p>
         </div>
       ) : (
-        <div className="border p-6 bg-white rounded-lg shadow-md">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {designs.map((design) => (
-            <div key={design.id} className="mb-6">
-              <h3 className="text-2xl font-semibold">{design.name}</h3>
+            <div
+              key={design.id}
+              className="border p-4 md:p-6 bg-white rounded-lg shadow-md flex flex-col"
+            >
+              <h3 className="text-lg md:text-xl font-semibold">{design.name}</h3>
               <p className="text-gray-600">Price Range: ₹{design.price_range}</p>
 
               {/* PDF Link */}
@@ -115,7 +117,7 @@ const Designs = () => {
 
               {/* Page Selection */}
               <div className="mt-4">
-                <label className="block font-semibold">
+                <label className="block font-semibold text-sm md:text-base">
                   Enter Design Page (1-{design.max_pages})
                 </label>
                 <input
@@ -124,7 +126,7 @@ const Designs = () => {
                   max={design.max_pages}
                   value={selectedPages[design.id] || ""}
                   onChange={(e) => handlePageSelection(design.id, parseInt(e.target.value), design.max_pages)}
-                  className="border rounded-lg p-2 w-full mt-2"
+                  className="border rounded-lg p-2 w-full mt-2 text-sm md:text-base"
                 />
               </div>
 
@@ -139,7 +141,7 @@ const Designs = () => {
               <button
                 onClick={() => handleAddToCart(design)}
                 disabled={!selectedPages[design.id] || !calculatedPrices[design.id]}
-                className="mt-4 bg-purple-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-purple-700 disabled:opacity-50"
+                className="mt-4 bg-purple-600 text-white px-4 py-3 rounded-lg flex items-center gap-2 justify-center hover:bg-purple-700 disabled:opacity-50 text-sm md:text-base"
               >
                 <ShoppingCart size={20} />
                 Add to Cart
